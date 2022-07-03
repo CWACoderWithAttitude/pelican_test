@@ -1,0 +1,1 @@
+{"buildTargets":["clean","devserver","devserver-global","github","help","html","make","publish","regenerate","rsync_upload","serve","serve-global","sftp_upload","ssh_upload"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
