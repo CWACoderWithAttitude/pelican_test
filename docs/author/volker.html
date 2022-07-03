@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Brain - Volker</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Brain</a></h1>
+                <nav><ul>
+                    <li><a href="/category/api.html">API</a></li>
+                    <li><a href="/category/python.html">Python</a></li>
+                    <li><a href="/category/ssh.html">SSH</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/fun-with-ssh.html">Fun with SSH</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2022-06-26T15:40:00+02:00">
+                Published: So 26 Juni 2022
+        </abbr>
+		<br />
+        <abbr class="modified" title="2022-06-26T15:40:00+02:00">
+                Updated: So 26 Juni 2022
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/volker.html">Volker</a>
+        </address>
+<p>In <a href="/category/ssh.html">SSH</a>.</p>
+<p>tags: <a href="/tag/ssh.html">SSH</a> <a href="/tag/secure-connection.html">secure connection</a> <a href="/tag/remote.html">remote</a> </p>
+</footer><!-- /.post-info --><p>SSH enables us to establish secure connections to remote machines. <br>
+Using SSH keys we can setup a secure connection which does not require us to enter a password each ti,e we want to connect.   </p>
+<p>Assumption:
+1. we can 
+But first thigs first. <br>
+To give you a practical example we're going to setup everything to connect to our raspberry pi.   </p>
+<ol>
+<li>First connection with password for user <code>pi</code></li>
+</ol>
+<div class="highlight"><pre><span></span><code>❯ ssh pi@raspi4.fritz.box
+The authenticity of host <span class="s1">&#39;raspi4.fritz.box (192.168.178.154)&#39;</span> can<span class="s1">&#39;t be established.</span>
+<span class="s1">ED25519 key fingerprint is SHA256:3ougi+3fGsIQtSJjYh+UScBysSrtNkY3IyhTInatSfU.</span>
+<span class="s1">This key is not known by any other names</span>
+<span class="s1">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes</span>
+<span class="s1">Warning: Permanently added &#39;</span>raspi4.fritz.box<span class="err">&#39;</span> <span class="o">(</span>ED25519<span class="o">)</span> to the list of known hosts.
+Linux raspberrypi <span class="m">5</span>.10.92-v7l+ <span class="c1">#1514 SMP Mon Jan 17 17:38:03 GMT 2022 armv7l</span>
+...
+pi@raspberrypi:~ $
+</code></pre></div>
+
+<p>This means we attempted to login to <code>raspi4</code> as user <code>pi</code>.  <br>
+Since this is our first attempt our host couldn't verify that the remote machine is what it claims to be.
+Therefore our machine will memorize the fingerprint for this machine.   </p>
+<ol>
+<li>Second login with password for <code>pi</code></li>
+</ol>
+<div class="highlight"><pre><span></span><code>❯ ssh pi@raspi4.fritz.box
+Linux raspberrypi <span class="m">5</span>.10.92-v7l+ <span class="c1">#1514 SMP Mon Jan 17 17:38:03 GMT 2022 armv7l</span>
+
+...
+pi@raspberrypi:~ $
+</code></pre></div>
+
+<p>A bit smoother but not our goal - passwordless login.</p>
+<ol>
+<li>Create a <code>ssh-key</code> </li>
+</ol>
+<div class="highlight"><pre><span></span><code>❯ ssh-keygen -a <span class="m">200</span> -C <span class="s2">&quot;My key to raspi4&quot;</span> -t ed25519 -f ~/.ssh/id_ed25519_raspi4
+Generating public/private ed25519 key pair.
+Enter passphrase <span class="o">(</span>empty <span class="k">for</span> no passphrase<span class="o">)</span>:
+Enter same passphrase again:
+Your identification has been saved <span class="k">in</span> /Users/volker/.ssh/id_ed25519_raspi4
+Your public key has been saved <span class="k">in</span> /Users/volker/.ssh/id_ed25519_raspi4.pub
+The key fingerprint is:
+SHA256:7Dwe5OdzPoVWeYTBi1caSaXuPNVj9fT3/CWwnZ+xKvk My key to raspi4
+The key<span class="err">&#39;</span>s randomart image is:
++--<span class="o">[</span>ED25519 <span class="m">256</span><span class="o">]</span>--+
+<span class="p">|</span>             <span class="nv">oo</span><span class="o">=</span>.<span class="p">|</span>
+<span class="p">|</span>              <span class="o">=</span>.o<span class="p">|</span>
+<span class="p">|</span>             ..Bo<span class="p">|</span>
+<span class="p">|</span>       .    ..*.*<span class="p">|</span>
+<span class="p">|</span>        S   .+.+*<span class="p">|</span>
+<span class="p">|</span>       <span class="o">=</span>    o*o++<span class="p">|</span>
+<span class="p">|</span>        * ..o.B.+<span class="p">|</span>
+<span class="p">|</span>       . <span class="o">=</span>.oo  +*<span class="p">|</span>
+<span class="p">|</span>        . .++E.oo<span class="p">|</span>
++----<span class="o">[</span>SHA256<span class="o">]</span>-----+
+</code></pre></div>
+
+<p>To make it more convenient you could setup ssh connections in your local <code>~/.ssh/config</code>:   </p>
+<div class="highlight"><pre><span></span><code>Host raspi4
+  User pi
+  HostName raspi4.local
+  IdentityFile ~/.ssh/id_raspi4
+  PreferredAuthentications publickey
+</code></pre></div>
+
+<p>This makes connecting as easy as </p>
+<div class="highlight"><pre><span></span><code>❯ ssh raspi4
+Linux raspberrypi <span class="m">5</span>.10.92-v7l+ <span class="c1">#1514 SMP Mon Jan 17 17:38:03 GMT 2022 armv7l</span>
+
+The programs included with the Debian GNU/Linux system are free software<span class="p">;</span>
+the exact distribution terms <span class="k">for</span> each program are described <span class="k">in</span> the
+individual files <span class="k">in</span> /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Mon Jun <span class="m">27</span> <span class="m">18</span>:17:13 <span class="m">2022</span>
+
+SSH is enabled and the default password <span class="k">for</span> the <span class="s1">&#39;pi&#39;</span> user has not been changed.
+This is a security risk - please login as the <span class="s1">&#39;pi&#39;</span> user and <span class="nb">type</span> <span class="s1">&#39;passwd&#39;</span> to <span class="nb">set</span> a new password.
+
+pi@raspberrypi:~ $
+</code></pre></div>
+
+<p>Example</p>
+<div class="highlight"><pre><span></span><code>❯ ssh pi@raspi4
+Linux raspberrypi <span class="m">5</span>.10.92-v7l+ <span class="c1">#1514 SMP Mon Jan 17 17:38:03 GMT 2022 armv7l</span>
+...
+pi@raspberrypi:~ $
+</code></pre></div>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/generating-mock-data-json.html" rel="bookmark"
+                           title="Permalink to Generating JSON test data">Generating JSON test data</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2022-06-26T15:40:00+02:00">
+                Published: So 26 Juni 2022
+        </abbr>
+		<br />
+        <abbr class="modified" title="2022-06-26T15:40:00+02:00">
+                Updated: So 26 Juni 2022
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/volker.html">Volker</a>
+        </address>
+<p>In <a href="/category/api.html">API</a>.</p>
+<p>tags: <a href="/tag/json.html">json</a> <a href="/tag/mock-data.html">mock data</a> <a href="/tag/test-data.html">test data</a> <a href="/tag/generator.html">generator</a> </p>
+</footer><!-- /.post-info -->                <p>Mocking json data</p>
+                <a class="readmore" href="/generating-mock-data-json.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/ssh-wo-pwd.html" rel="bookmark"
+                           title="Permalink to Fun with SSH">Fun with SSH</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2022-06-26T15:40:00+02:00">
+                Published: So 26 Juni 2022
+        </abbr>
+		<br />
+        <abbr class="modified" title="2022-06-26T15:40:00+02:00">
+                Updated: So 26 Juni 2022
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/volker.html">Volker</a>
+        </address>
+<p>In <a href="/category/ssh.html">SSH</a>.</p>
+<p>tags: <a href="/tag/ssh.html">SSH</a> <a href="/tag/secure-connection.html">secure connection</a> <a href="/tag/remote.html">remote</a> <a href="/tag/passwordless.html">passwordless</a> </p>
+</footer><!-- /.post-info -->                <p>Setup SSH w Key Authentication</p>
+                <a class="readmore" href="/ssh-wo-pwd.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>links</h2>
+                        <ul>
+                            <li><a href="https://getpelican.com/">Pelican</a></li>
+                            <li><a href="https://www.python.org/">Python.org</a></li>
+                            <li><a href="https://palletsprojects.com/p/jinja/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
